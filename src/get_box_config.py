@@ -10,19 +10,20 @@ class CurrentConfig(object):
 def login_secure():
     tn = telnetlib.Telnet()
     print "Enter IP address or FQDN:"
+    #96.123.111.39,  96.122.163.29
     ip_fqdn = raw_input()
     tn.open(ip_fqdn)
-    print tn.read_until("username: ")
+    f = open('current_config.txt', 'w')
+    #print tn.read_until("username: ")
     tn.write(raw_input("Enter username") + '\r\n')
-    #tn.read_until("password: ")
-    print tn.read_until("password: ")
-    #tn.write(password + "\n")
+    #print tn.read_until("password: ")
     tn.write(raw_input("Enter pass") + '\r\n')
-    #print tn.read_all()
-    tn.write("terminal length 0" + "\r\n")
-    print tn.read_all()
-    tn.write("config show\f\n")
-    print tn.read_all()
+    tn.write("system shell set global-more off" + "\r\n")
+    tn.write("config show\r\n")
+    f.write(tn.read_all())
+    tn.write("system shell set global-more on" + "\r\n")
+    tn.write("exit\r\n")
+    f.close()
     tn.close()
 
 
