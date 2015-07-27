@@ -1,2 +1,0 @@
-system shell set global-more off
-ce-lxtnmajk00w.cpe.ma.boston> 

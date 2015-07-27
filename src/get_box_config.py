@@ -1,60 +1,90 @@
 __author__ = 'snalam200'
 import telnetlib
+import socket
 import sys
 import time
-
-class CurrentConfig(object):
-    def __init__(self):
-        pass
+from src.scratch.test import login_secure as login_secure_test
 
 
-def login_secure():
-    tn = telnetlib.Telnet()
-    print "Enter IP address or FQDN:"
-    #96.123.111.39,  96.122.163.29
-    ip_fqdn = raw_input()
-    tn.open(ip_fqdn, 23, 120)
-    tn.write(raw_input("Enter username") + '\r\n')
-    tn.write(raw_input("Enter pass") + '\r\n')
-    if 'username' not in tn.read_all():
-        f = open('current_config.txt', 'w')
-        tn.write("system shell set global-more off" + "\r\n")
-        tn.write("config show\r\n")
-        f.write(tn.read_all())
-        tn.write("system shell set global-more on" + "\r\n")
-        tn.write("exit\r\n")
-        f.close()
-        tn.close()
+class CienaConfig(object):
+    def __init__(self, ip_fqdn, config_txt=''):
+        self.ip_fqdn = ip_fqdn.strip()
+        self.config_txt = config_txt
 
 
-def login_secure():
-    tn = telnetlib.Telnet()
-    print "Enter IP address or FQDN:"
-    ip_fqdn = raw_input()
-    tn.open(ip_fqdn, 23, 300)
-    f = open('current_config1.txt', 'w')
-    print tn.read_until("username: " or "login: ")
-    tn.write(raw_input() + '\n')
-    print tn.read_until("password: " or "Password:")
-    tn.write(raw_input() + '\n')
-    #time.sleep(1)
-    tn.read_until('> ')
-    tn.write("system shell set global-more off\r")
-    #time.sleep(1)
-    tn.read_until('> ')
-    tn.write("config show \r\n")
-    '''data = ''
-    while data.find('>') == -1:
-        data += tn.read_all()
-    f.write(data)
-    '''
-    f.write(tn.read_until('>'))
+def check_prompt(prompt_list, prompt_read):
+    success = False
+    for prompt in prompt_list:
+        if prompt in prompt_read:
+            success = True
+    return success
+
+
+def get_configs(ciena_config, tn):
+    f = open('current_config.txt', 'w')
+    time.sleep(3)
+    tn.read_until(b'> ')
+    tn.write("system shell set global-more off" + "\n")
+    time.sleep(3)
+    tn.read_until(b'> ')
+    tn.write("config show\n")
+    ciena_config.config_txt = tn.read_until(b'> ')
+    f.write(ciena_config.config_txt)
+    time.sleep(5)
+    tn.write("system shell set global-more on" + "\n")
+    time.sleep(3)
+    tn.write("exit\n")
     f.close()
-    #tn.read_until('> ')
-    time.sleep(2)
-    tn.write("system shell set global-more on" + "\r\n")
-    #time.sleep(1)
-    print tn.read_until('> ')
-    tn.write("exit\r\n")
-    print tn.read_until('.', 5)
     tn.close()
+
+
+def login_secure():
+    tn = telnetlib.Telnet()
+    #96.123.111.39,  96.122.163.29
+    ip_fqdn = raw_input("Enter IP address or FQDN:")
+    current_config = CienaConfig(ip_fqdn)
+    retry = 2
+
+    for attempt in range(0, retry):
+        try:
+            #tn.open(current_config.ip_fqdn, 23, 120)
+            tn.open('96.122.163.29', 23, 300)
+        except Exception, ex:
+            print "Caught error {}".format(ex)
+            sys.exit(1)
+        else:
+            login_str_a = 'username: '
+            login_str_b = 'login: '
+            password_str = 'assword: '
+
+            user_prompt = tn.read_until(login_str_a or login_str_b, 5)
+            if check_prompt([login_str_a, login_str_b], user_prompt)is True:
+                print user_prompt
+                tn.write(raw_input().strip() + '\n')
+            else:
+                print "Couldn't locate username prompt. Telnet session not available."
+                tn.close()
+                continue
+
+            pass_prompt = tn.read_until("assword: ")
+            if check_prompt([password_str], pass_prompt)is True:
+                print pass_prompt
+                tn.write(raw_input().strip() + '\n')
+            else:
+                print "Couldn't locate password prompt. This Telnet session is not available."
+                tn.close()
+                continue
+            time.sleep(2)
+            read_txt = tn.read_until(b'> ')
+            if 'username' not in read_txt:
+                get_configs(current_config, tn)
+                break
+            else:
+                print "Incorrect username/password "
+                tn.close()
+                continue
+
+
+if __name__ == "__main__":
+    login_secure()
+
