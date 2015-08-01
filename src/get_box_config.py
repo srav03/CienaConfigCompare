@@ -3,7 +3,7 @@ import telnetlib
 import socket
 import sys
 import time
-from src.scratch.test import login_secure as login_secure_test
+#from src.scratch.test import login_secure as login_secure_test
 
 
 class CienaConfig(object):
@@ -47,8 +47,8 @@ def login_secure():
 
     for attempt in range(0, retry):
         try:
-            #tn.open(current_config.ip_fqdn, 23, 120)
-            tn.open('96.122.163.29', 23, 300)
+            tn.open(current_config.ip_fqdn, 23, 300)
+            #tn.open('96.122.163.29', 23, 300)
         except Exception, ex:
             print "Caught error {}".format(ex)
             sys.exit(1)
