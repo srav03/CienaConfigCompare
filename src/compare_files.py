@@ -1,30 +1,30 @@
 __author__ = 'snalam200'
 import difflib
+import sys
+import get_box_config
 
 
 class CompareFiles(object):
-    def __init__(self, text1, text2, cmp_text=''):
-        self.text1 = text1
-        self.text2 = text2
-        self.cmp_text = cmp_text
+    def __init__(self, file_name1, file_name2, comp_html=''):
+        self.text1 = open(file_name1, 'r').readlines()
+        self.text2 = open(file_name2, 'r').readlines()
+        self.cmp_text = comp_html
 
+    def compare(self, desktop_path):
+        diff_object = difflib.HtmlDiff()
+        try:
+            comp_file = open(desktop_path+'compare_file.html', 'w')
+        except IOError:
+            print "Incorrect NT-Login ID. Please enter as it is in your C:\\Users\\xxxxxx"
+            sys.exit(1)
+        comp_file.write(diff_object.make_file(self.text1, self.text2))
+        comp_file.close()
 
-def comparison(text1, text2):
-    open(text1, 'r').readlines()
-    open(text2, 'r').readlines()
-    diff_object = difflib.HtmlDiff()
-    comp_file = open('compare_file.html', 'w')
-    comapre_textfiles = CompareFiles(text1, text2)
-    comp_file.write(diff_object.make_file(comapre_textfiles.text1, comapre_textfiles.text2))
-    text1.close()
-    text2.close()
 
 if __name__ == "__main__":
-    comparison('current_config.txt', 'actual.txt')
-
-
-
-
-
+    get_box_config.login_secure()
+    nt_login_id = raw_input("Enter your NT-Login ID:").strip()
+    desktop_path = 'C:\\Users\\'+nt_login_id+'\\Desktop\\'
+    CompareFiles('current_config.txt', desktop_path+'actual.txt').compare(desktop_path)
 
 

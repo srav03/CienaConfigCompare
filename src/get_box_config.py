@@ -82,7 +82,10 @@ def login_secure():
             else:
                 print "Incorrect username/password "
                 tn.close()
-                continue
+                if attempt == 0:
+                    continue
+                else:
+                    sys.exit(1)
 
 
 if __name__ == "__main__":
